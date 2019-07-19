@@ -3,20 +3,12 @@
 var proc = require('child_process')
 var os = require('os')
 var path = require('path')
-var resolveBin = require('resolve-bin')
 
 if (!buildFromSource()) {
-  resolveBin('node-gyp-build-test', function (err, binPath) {
+  proc.exec('node ' + path.join(__dirname, 'build-test.js'), function (err, stdout, stderr) {
     if (err) {
-      if (verbose()) console.error(err.stack || err)
-      preinstall();
-    } else {
-      proc.exec('node ' + binPath, function (err, stdout, stderr) {
-        if (err) {
-          if (verbose()) console.error(stderr)
-          preinstall()
-        }
-      })
+      if (verbose()) console.error(stderr)
+      preinstall()
     }
   })
 
