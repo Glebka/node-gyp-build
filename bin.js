@@ -3,19 +3,28 @@
 var proc = require('child_process')
 var os = require('os')
 var path = require('path')
+var resolveBin = require('resolve-bin')
 
 if (!buildFromSource()) {
-  proc.exec('node-gyp-build-test', function (err, stdout, stderr) {
+  resolveBin('node-gyp-build-test', function (err, binPath) {
     if (err) {
-      if (verbose()) console.error(stderr)
-      preinstall()
+      if (verbose()) console.error(err.stack || err)
+      preinstall();
+    } else {
+      proc.exec('node ' + binPath, function (err, stdout, stderr) {
+        if (err) {
+          if (verbose()) console.error(stderr)
+          preinstall()
+        }
+      })
     }
   })
+
 } else {
   preinstall()
 }
 
-function build () {
+function build() {
   var args = [os.platform() === 'win32' ? 'node-gyp.cmd' : 'node-gyp', 'rebuild']
 
   try {
@@ -24,7 +33,7 @@ function build () {
       path.join(require.resolve('node-gyp/package.json'), '..', require('node-gyp/package.json').bin['node-gyp']),
       'rebuild'
     ]
-  } catch (_) {}
+  } catch (_) { }
 
   proc.spawn(args[0], args.slice(1), { stdio: 'inherit' }).on('exit', function (code) {
     if (code || !process.argv[3]) process.exit(code)
@@ -34,7 +43,7 @@ function build () {
   })
 }
 
-function preinstall () {
+function preinstall() {
   if (!process.argv[2]) return build()
   exec(process.argv[2]).on('exit', function (code) {
     if (code) process.exit(code)
@@ -42,7 +51,7 @@ function preinstall () {
   })
 }
 
-function exec (cmd) {
+function exec(cmd) {
   if (process.platform !== 'win32') {
     var shell = os.platform() === 'android' ? 'sh' : '/bin/sh'
     return proc.spawn(shell, ['-c', cmd], {
@@ -56,15 +65,15 @@ function exec (cmd) {
   })
 }
 
-function buildFromSource () {
+function buildFromSource() {
   return hasFlag('--build-from-source')
 }
 
-function verbose () {
+function verbose() {
   return hasFlag('--verbose')
 }
 
-function hasFlag (flag) {
+function hasFlag(flag) {
   if (!process.env.npm_config_argv) return false
 
   try {

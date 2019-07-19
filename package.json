@@ -8,6 +8,9 @@
     "standard": "^13.0.2",
     "tape": "^4.10.1"
   },
+  "dependencies": {
+    "resolve-bin": "0.4.0"
+  },
   "scripts": {
     "test": "standard && node test"
   },
